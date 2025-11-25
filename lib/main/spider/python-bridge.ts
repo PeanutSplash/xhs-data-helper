@@ -277,13 +277,21 @@ export class PythonBridge {
     return new Promise((resolve, reject) => {
       const pythonPath = this.getPythonPath()
       const cliPath = this.getCliPath()
+      const packagesPath = this.getPackagesPath()
+
+      const env: NodeJS.ProcessEnv = {
+        ...process.env,
+        NODE_PATH: process.execPath,
+      }
+
+      // Add PYTHONPATH if packages path exists
+      if (packagesPath) {
+        env.PYTHONPATH = packagesPath
+      }
 
       const validateProcess = spawn(pythonPath, [cliPath, 'validate-cookie', JSON.stringify(cookie)], {
         cwd: path.dirname(cliPath),
-        env: {
-          ...process.env,
-          NODE_PATH: process.execPath,
-        },
+        env,
       })
 
       let output = ''
