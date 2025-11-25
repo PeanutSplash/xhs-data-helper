@@ -5,6 +5,7 @@ import { databaseManager } from '@/lib/main/spider/database-manager'
 import { queueManager } from '@/lib/main/spider/queue-manager'
 import * as XLSX from 'xlsx'
 import * as fs from 'fs'
+import appIcon from '@/resources/build/icon.png?asset'
 
 export function registerSpiderHandlers(mainWindow: BrowserWindow | null) {
   // Set main window for queue manager
@@ -246,9 +247,11 @@ async function openLoginWindow(): Promise<{ success: boolean; cookie?: string; e
       width: 500,
       height: 700,
       title: '登录小红书',
+      icon: appIcon,
       resizable: false,
       maximizable: false,
       fullscreenable: false,
+      autoHideMenuBar: true,
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
