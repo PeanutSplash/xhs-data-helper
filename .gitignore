@@ -6,3 +6,4 @@ out
 temp
 tsconfig.node.tsbuildinfo
 tsconfig.web.tsbuildinfo
+.python-version
