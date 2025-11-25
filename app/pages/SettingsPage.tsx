@@ -82,7 +82,7 @@ export default function SettingsPage({ onCookieStatusChange }: SettingsPageProps
         setIsCookieValid(true)
         setUserNickname(result.userInfo?.nickname || null)
         onCookieStatusChange('valid')
-        toast.success(`Cookie 验证成功！用户: ${result.userInfo?.nickname || '未知'}`)
+        toast.success('Cookie 验证成功')
       } else {
         // 验证失败
         setIsCookieValid(false)
@@ -120,7 +120,7 @@ export default function SettingsPage({ onCookieStatusChange }: SettingsPageProps
           setIsCookieValid(true)
           setUserNickname(validationResult.userInfo?.nickname || null)
           onCookieStatusChange('valid')
-          toast.success(`Cookie 验证成功！用户: ${validationResult.userInfo?.nickname || '未知'}`)
+          toast.success('Cookie 验证成功')
         } else {
           setIsCookieValid(false)
           setUserNickname(null)

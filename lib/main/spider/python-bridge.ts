@@ -78,7 +78,7 @@ export class PythonBridge {
     }
 
     // Development: use system Python
-    return 'python3'
+    return 'python'
   }
 
   /**
