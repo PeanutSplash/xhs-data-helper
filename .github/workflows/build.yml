@@ -82,6 +82,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          path: dist/**
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.AppImage
           if-no-files-found: error
           compression-level: 6

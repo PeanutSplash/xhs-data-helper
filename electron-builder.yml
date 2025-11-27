@@ -54,8 +54,6 @@ linux:
       filter: ["**/*"]
   target:
     - AppImage
-    - snap
-    - deb
   maintainer: electronjs.org
   category: Utility
 appImage:
