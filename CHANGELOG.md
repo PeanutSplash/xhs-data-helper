@@ -4,6 +4,8 @@ All notable changes are listed here.
 
 <br>
 
+## [1.0.4] - 2025-11-28
+
 ## [1.0.3] - 2025-11-28
 
 ### Chores
