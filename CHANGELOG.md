@@ -4,6 +4,23 @@ All notable changes are listed here.
 
 <br>
 
+## [1.0.7] - 2025-11-29
+
+### Features
+
+- Update license and improve documentation structure
+- Improve login window appearance and behavior
+
+### Bug Fixes
+
+- Updates download icon component name
+- Transform queue task config for Python bridge compatibility
+- Add PYTHONPATH support for cookie validation
+
+### Refactoring
+
+- Refactor download workflow and improve queue management
+
 ## [1.0.6] - 2025-11-28
 
 ### Features
