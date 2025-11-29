@@ -211,11 +211,14 @@ function main() {
   // Create git tag
   exec(`git tag v${actualNewVersion}`);
 
+  // Push to remote
+  exec(`git push origin main`);
+  exec(`git push origin v${actualNewVersion}`);
+
   console.log(`\n✓ Version bumped to ${actualNewVersion}`);
   console.log(`✓ CHANGELOG.md updated`);
   console.log(`✓ Git tag v${actualNewVersion} created`);
-  console.log(`\nNext steps:`);
-  console.log(`  git push origin main && git push origin v${actualNewVersion}`);
+  console.log(`✓ Pushed to remote`);
 }
 
 main();
