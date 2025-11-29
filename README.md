@@ -4,6 +4,8 @@
 
 **批量下载笔记内容的桌面工具**
 
+<img src="docs/assets/preview.png" alt="软件界面预览" width="800">
+
 图片 • 视频 • Excel 数据 • 本地运行
 
 [![Windows](https://img.shields.io/badge/Windows-支持-0078D6?logo=windows&logoColor=white)](https://github.com/PeanutSplash/xhs-data-helper/releases)

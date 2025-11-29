@@ -474,13 +474,6 @@ export default function DownloadPage({ onDownloadStarted }: DownloadPageProps = 
               </>
             )}
           </Button>
-
-          {/* Hint */}
-          <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
-            <p className="text-xs text-blue-600 dark:text-blue-400">
-              💡 下载会自动排队，可以继续添加更多
-            </p>
-          </div>
         </div>
       </div>
     </motion.div>
