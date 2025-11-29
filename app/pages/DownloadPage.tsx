@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Download, FileText, User, Search, Loader2, Sparkles, Save, FileSpreadsheet, Image, Video } from 'lucide-react'
+import { Download, FileText, User, Search, Loader2, Sparkles, Save, FileSpreadsheet, Image } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
@@ -39,8 +39,6 @@ export default function DownloadPage({ onDownloadStarted }: DownloadPageProps = 
   // Common state
   const [saveMode, setSaveMode] = useState<SaveMode>('all')
   const [excelName, setExcelName] = useState('')
-  const [saveVideo, setSaveVideo] = useState(true)
-  const [saveImage, setSaveImage] = useState(true)
 
   const handleDownload = async () => {
     setIsSubmitting(true)
@@ -87,10 +85,6 @@ export default function DownloadPage({ onDownloadStarted }: DownloadPageProps = 
         }
       }
 
-      const mediaTypes: ('video' | 'image')[] = []
-      if (saveVideo) mediaTypes.push('video')
-      if (saveImage) mediaTypes.push('image')
-
       const taskConfig = {
         taskType,
         params,
@@ -99,7 +93,6 @@ export default function DownloadPage({ onDownloadStarted }: DownloadPageProps = 
           saveOptions: {
             mode: saveMode,
             excelName: excelName || (taskType === 'search' ? searchQuery : '数据'),
-            mediaTypes,
           },
           paths: config.paths,
           proxy: config.proxy.enabled ? config.proxy.url : undefined,
@@ -406,52 +399,6 @@ export default function DownloadPage({ onDownloadStarted }: DownloadPageProps = 
                 </div>
               )}
 
-              {/* Media Types */}
-              {(saveMode === 'media' || saveMode === 'all') && (
-                <div className="space-y-3">
-                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">媒体类型</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label
-                      className={`
-                        flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-300
-                        ${
-                          saveVideo
-                            ? 'border-primary/50 bg-primary/5 text-primary'
-                            : 'border-border/50 hover:border-primary/30 hover:bg-secondary/50'
-                        }
-                      `}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={saveVideo}
-                        onChange={(e) => setSaveVideo(e.target.checked)}
-                        className="hidden"
-                      />
-                      <Video className="w-4 h-4" />
-                      <span className="font-medium text-sm">视频</span>
-                    </label>
-                    <label
-                      className={`
-                        flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-300
-                        ${
-                          saveImage
-                            ? 'border-primary/50 bg-primary/5 text-primary'
-                            : 'border-border/50 hover:border-primary/30 hover:bg-secondary/50'
-                        }
-                      `}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={saveImage}
-                        onChange={(e) => setSaveImage(e.target.checked)}
-                        className="hidden"
-                      />
-                      <Image className="w-4 h-4" />
-                      <span className="font-medium text-sm">图片</span>
-                    </label>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
 

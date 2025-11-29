@@ -16,7 +16,6 @@ export interface SpiderConfig {
   saveOptions: {
     mode: 'excel' | 'media' | 'all'
     excelName?: string
-    mediaTypes?: ('video' | 'image')[]
   }
   paths: {
     media: string

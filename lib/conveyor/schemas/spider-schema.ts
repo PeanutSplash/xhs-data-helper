@@ -8,7 +8,6 @@ export const SpiderConfigSchema = z.object({
   saveOptions: z.object({
     mode: z.enum(['excel', 'media', 'all']),
     excelName: z.string().optional(),
-    mediaTypes: z.array(z.enum(['video', 'image'])).optional(),
   }),
   paths: z.object({
     media: z.string(),
