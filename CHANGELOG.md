@@ -4,6 +4,28 @@ All notable changes are listed here.
 
 <br>
 
+## [1.0.9] - 2025-11-30
+
+### Features
+
+- Enhances UI with custom scrollbars and updates settings
+- Introduces geolocation and note range search filters
+- Update license and improve documentation structure
+- Improve login window appearance and behavior
+
+### Bug Fixes
+
+- Fixes stuck tasks on application startup
+- Delegates task database operations to Python bridge
+- Removes media type selection from download options
+- Updates download icon component name
+- Transform queue task config for Python bridge compatibility
+- Add PYTHONPATH support for cookie validation
+
+### Refactoring
+
+- Refactor download workflow and improve queue management
+
 ## [1.0.8] - 2025-11-29
 
 ### Features

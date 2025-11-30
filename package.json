@@ -1,6 +1,6 @@
 {
   "name": "xhs-helper",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "小红书数据助手 - 轻松保存你喜欢的小红书笔记",
   "main": "./out/main/main.js",
   "license": "CC-BY-NC-4.0",
