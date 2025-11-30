@@ -11,10 +11,10 @@ files:
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
 # asarUnpack not needed - Python runtime is in extraResources
 extraResources:
-  # Python scripts
+  # Python scripts and Node.js dependencies (required for PyExecJS)
   - from: "python-engine"
     to: "python-engine"
-    filter: ["**/*", "!__pycache__", "!*.pyc", "!.git"]
+    filter: ["**/*", "!__pycache__", "!*.pyc", "!.git", "!.gitignore", "!.env"]
   # Python packages (pre-installed dependencies)
   - from: "resources/python-packages"
     to: "python-packages"
