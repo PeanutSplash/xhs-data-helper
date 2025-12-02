@@ -80,12 +80,25 @@ jobs:
           restore-keys: |
             macOS-python-darwin-x64-
 
+      - name: Cache Python runtime for arm64 (Windows only)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: resources/python/win32-arm64/python
+          key: Windows-python-win32-arm64-${{ hashFiles('python-engine/requirements.txt') }}
+          restore-keys: |
+            Windows-python-win32-arm64-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Download Python for x64 (macOS only)
         if: runner.os == 'macOS'
         run: node scripts/download-python.js darwin-x64
+
+      - name: Download Python for arm64 (Windows only)
+        if: runner.os == 'Windows'
+        run: node scripts/download-python.js win32-arm64
 
       - name: Build application
         run: pnpm run ${{ matrix.build_script }}
@@ -148,7 +161,8 @@ jobs:
 
             | 平台 | 下载 |
             |------|------|
-            | 🪟 Windows | [xhs-helper-${{ steps.version.outputs.version }}-setup.exe](https://github.com/PeanutSplash/xhs-data-helper/releases/download/${{ github.ref_name }}/xhs-helper-${{ steps.version.outputs.version }}-setup.exe) |
+            | 🪟 Windows (x64) | [xhs-helper-${{ steps.version.outputs.version }}-x64-setup.exe](https://github.com/PeanutSplash/xhs-data-helper/releases/download/${{ github.ref_name }}/xhs-helper-${{ steps.version.outputs.version }}-x64-setup.exe) |
+            | 🪟 Windows (ARM64) | [xhs-helper-${{ steps.version.outputs.version }}-arm64-setup.exe](https://github.com/PeanutSplash/xhs-data-helper/releases/download/${{ github.ref_name }}/xhs-helper-${{ steps.version.outputs.version }}-arm64-setup.exe) |
             | 🍎 macOS (Apple Silicon) | [xhs-helper-${{ steps.version.outputs.version }}-arm64.dmg](https://github.com/PeanutSplash/xhs-data-helper/releases/download/${{ github.ref_name }}/xhs-helper-${{ steps.version.outputs.version }}-arm64.dmg) |
             | 🍎 macOS (Intel) | [xhs-helper-${{ steps.version.outputs.version }}-x64.dmg](https://github.com/PeanutSplash/xhs-data-helper/releases/download/${{ github.ref_name }}/xhs-helper-${{ steps.version.outputs.version }}-x64.dmg) |
             | 🐧 Linux | [xhs-helper-${{ steps.version.outputs.version }}.AppImage](https://github.com/PeanutSplash/xhs-data-helper/releases/download/${{ github.ref_name }}/xhs-helper-${{ steps.version.outputs.version }}.AppImage) |

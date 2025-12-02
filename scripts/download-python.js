@@ -19,6 +19,7 @@ const PLATFORMS = {
   'linux-x64': `cpython-${PYTHON_VERSION}-x86_64-unknown-linux-gnu-install_only.tar.gz`,
   'linux-arm64': `cpython-${PYTHON_VERSION}-aarch64-unknown-linux-gnu-install_only.tar.gz`,
   'win32-x64': `cpython-${PYTHON_VERSION}-x86_64-pc-windows-msvc-shared-install_only.tar.gz`,
+  'win32-arm64': `cpython-${PYTHON_VERSION}-aarch64-pc-windows-msvc-shared-install_only.tar.gz`,
 }
 
 function getPlatformKey() {
