@@ -4,6 +4,8 @@ All notable changes are listed here.
 
 <br>
 
+## [1.0.11] - 2025-12-02
+
 ## [1.0.10] - 2025-11-30
 
 ### Features
