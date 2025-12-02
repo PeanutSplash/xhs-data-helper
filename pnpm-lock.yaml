@@ -111,6 +111,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^5.0.1
         version: 5.1.1(vite@7.2.4(@types/node@24.10.1)(jiti@2.6.1)(lightningcss@1.30.2))
+      adm-zip:
+        specifier: ^0.5.16
+        version: 0.5.16
       cross-env:
         specifier: ^10.0.0
         version: 10.1.0
@@ -1427,6 +1430,10 @@ packages:
   adler-32@1.3.1:
     resolution: {integrity: sha512-ynZ4w/nUUv5rrsR8UUGoe1VC9hZj6V5hU9Qw1HlMDJGEJw5S7TfTErWTjMys6M7vr0YWcPqs3qAr4ss0nDfP+A==}
     engines: {node: '>=0.8'}
+
+  adm-zip@0.5.16:
+    resolution: {integrity: sha512-TGw5yVi4saajsSEgz25grObGHEUaDrniwvA2qwSC060KfqGPdglhvPMA2lPIoxs3PQIItj2iag35fONcQqgUaQ==}
+    engines: {node: '>=12.0'}
 
   agent-base@6.0.2:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
@@ -5194,6 +5201,8 @@ snapshots:
   acorn@8.15.0: {}
 
   adler-32@1.3.1: {}
+
+  adm-zip@0.5.16: {}
 
   agent-base@6.0.2:
     dependencies:
