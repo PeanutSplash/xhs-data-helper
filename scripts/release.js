@@ -11,11 +11,13 @@ const path = require('path');
  *   node scripts/release.js minor  # bump minor (1.0.0 -> 1.1.0)
  *   node scripts/release.js major  # bump major (1.0.0 -> 2.0.0)
  *   node scripts/release.js --dry-run  # preview changes without committing
+ *   node scripts/release.js --force    # re-tag current version (move tag to HEAD)
  */
 
 // Parse arguments
 const args = process.argv.slice(2);
 const isDryRun = args.includes('--dry-run') || args.includes('-d');
+const isForce = args.includes('--force') || args.includes('-f');
 const versionType = args.find(arg => !arg.startsWith('-')) || 'patch';
 
 function exec(command, silent = false) {
@@ -161,10 +163,74 @@ function calculateNewVersion(current, type) {
   }
 }
 
+function retag() {
+  const currentVersion = getCurrentVersion();
+  const tagName = `v${currentVersion}`;
+
+  console.log('=== FORCE RE-TAG MODE ===\n');
+  console.log(`Current version: ${currentVersion}`);
+  console.log(`Re-tagging ${tagName} to point to current HEAD\n`);
+
+  // Check for uncommitted changes
+  try {
+    execSync('git diff-index --quiet HEAD --', { encoding: 'utf8' });
+  } catch (error) {
+    console.error('Error: You have uncommitted changes. Please commit or stash them first.');
+    process.exit(1);
+  }
+
+  // Check if tag exists locally
+  const localTagExists = execQuiet(`git tag -l ${tagName}`);
+
+  // Check if tag exists remotely
+  const remoteTagExists = execQuiet(`git ls-remote --tags origin ${tagName}`);
+
+  if (!localTagExists && !remoteTagExists) {
+    console.error(`Error: Tag ${tagName} does not exist locally or remotely.`);
+    console.error('Use normal release without --force to create a new tag.');
+    process.exit(1);
+  }
+
+  console.log('⚠️  WARNING: This will delete and recreate the tag!');
+  console.log(`   Local tag exists: ${localTagExists ? 'YES' : 'NO'}`);
+  console.log(`   Remote tag exists: ${remoteTagExists ? 'YES' : 'NO'}`);
+  console.log('');
+
+  // Delete local tag if exists
+  if (localTagExists) {
+    console.log('Deleting local tag...');
+    exec(`git tag -d ${tagName}`);
+  }
+
+  // Delete remote tag if exists
+  if (remoteTagExists) {
+    console.log('Deleting remote tag...');
+    exec(`git push origin :refs/tags/${tagName}`);
+  }
+
+  // Create new tag at HEAD
+  console.log('Creating new tag at HEAD...');
+  exec(`git tag ${tagName}`);
+
+  // Push new tag
+  console.log('Pushing new tag to remote...');
+  exec(`git push origin ${tagName}`);
+
+  console.log(`\n✓ Tag ${tagName} re-created at HEAD`);
+  console.log(`✓ Pushed to remote`);
+  console.log('\n⚠️  Remember to rebuild and re-upload release artifacts!');
+}
+
 function main() {
+  // Handle --force mode
+  if (isForce) {
+    retag();
+    return;
+  }
+
   if (!['patch', 'minor', 'major'].includes(versionType)) {
     console.error(`Invalid version type: ${versionType}`);
-    console.error('Usage: node scripts/release.js [patch|minor|major] [--dry-run]');
+    console.error('Usage: node scripts/release.js [patch|minor|major] [--dry-run] [--force]');
     process.exit(1);
   }
 
@@ -183,7 +249,7 @@ function main() {
   if (isDryRun) {
     console.log(`New version will be: ${newVersion}\n`);
     generateChangelog(newVersion);
-    console.log('[DRY RUN] No changes were made.');
+    console.log('[DRY RUN] No changes made.');
     console.log('Run without --dry-run to perform the release.');
     return;
   }
