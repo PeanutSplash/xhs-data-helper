@@ -4,6 +4,36 @@ All notable changes are listed here.
 
 <br>
 
+## [1.0.13] - 2025-12-04
+
+### Features
+
+- Enhances UI with custom scrollbars and updates settings
+- Introduces geolocation and note range search filters
+- Update license and improve documentation structure
+- Improve login window appearance and behavior
+
+### Bug Fixes
+
+- Fix PyExecJS NODE_PATH to locate node_modules correctly
+- Install Node.js dependencies for PyExecJS during Python setup
+- Fixes stuck tasks on application startup
+- Delegates task database operations to Python bridge
+- Removes media type selection from download options
+- Updates download icon component name
+- Transform queue task config for Python bridge compatibility
+- Add PYTHONPATH support for cookie validation
+
+### Refactoring
+
+- Refactor download workflow and improve queue management
+
+# Change Log
+
+All notable changes are listed here.
+
+<br>
+
 ## [1.0.12] - 2025-12-03
 
 ### Bug Fixes
