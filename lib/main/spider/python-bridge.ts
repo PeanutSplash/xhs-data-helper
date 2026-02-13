@@ -190,6 +190,7 @@ export class PythonBridge {
     const env: NodeJS.ProcessEnv = {
       ...process.env,
       NODE_PATH: nodeModulesPath, // For PyExecJS to find node_modules (crypto-js, etc.)
+      PYTHONIOENCODING: 'utf-8', // Fix Chinese character encoding on Windows
     }
 
     // Add PYTHONPATH if packages path exists
@@ -380,6 +381,7 @@ export class PythonBridge {
       const env: NodeJS.ProcessEnv = {
         ...process.env,
         NODE_PATH: nodeModulesPath, // For PyExecJS to find node_modules (crypto-js, etc.)
+        PYTHONIOENCODING: 'utf-8', // Fix Chinese character encoding on Windows
       }
 
       // Add PYTHONPATH if packages path exists
