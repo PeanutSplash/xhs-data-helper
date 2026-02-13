@@ -4,6 +4,13 @@ All notable changes are listed here.
 
 <br>
 
+## [1.0.15] - 2026-02-13
+
+### Bug Fixes
+
+- update python-engine submodule with notes task count fix
+- resolve windows encoding issue and optimize account anomaly detection
+
 ## [1.0.14] - 2025-12-06
 
 ## [1.0.13] - 2025-12-04
