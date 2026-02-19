@@ -191,6 +191,7 @@ export class PythonBridge {
       ...process.env,
       NODE_PATH: nodeModulesPath, // For PyExecJS to find node_modules (crypto-js, etc.)
       PYTHONIOENCODING: 'utf-8', // Fix Chinese character encoding on Windows
+      PYTHONUTF8: '1', // Force all Python I/O to use UTF-8 (fixes PyExecJS encoding on Windows)
     }
 
     // Add PYTHONPATH if packages path exists
@@ -382,6 +383,7 @@ export class PythonBridge {
         ...process.env,
         NODE_PATH: nodeModulesPath, // For PyExecJS to find node_modules (crypto-js, etc.)
         PYTHONIOENCODING: 'utf-8', // Fix Chinese character encoding on Windows
+        PYTHONUTF8: '1', // Force all Python I/O to use UTF-8 (fixes PyExecJS encoding on Windows)
       }
 
       // Add PYTHONPATH if packages path exists
