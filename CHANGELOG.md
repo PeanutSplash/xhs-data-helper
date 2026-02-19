@@ -4,6 +4,12 @@ All notable changes are listed here.
 
 <br>
 
+## [1.0.16] - 2026-02-19
+
+### Bug Fixes
+
+- add PYTHONUTF8
+
 ## [1.0.15] - 2026-02-13
 
 ### Bug Fixes
