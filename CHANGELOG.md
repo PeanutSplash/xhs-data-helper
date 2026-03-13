@@ -4,6 +4,12 @@ All notable changes are listed here.
 
 <br>
 
+## [1.0.18] - 2026-03-13
+
+### Bug Fixes
+
+- use Electron built-in Node.js for PyExecJS to fix SyntaxError on user machines (#12)
+
 ## [1.0.17] - 2026-03-13
 
 ## [1.0.16] - 2026-02-19
