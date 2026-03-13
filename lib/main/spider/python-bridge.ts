@@ -122,7 +122,7 @@ export class PythonBridge {
     }
 
     // Development: use system Python
-    return 'python'
+    return 'python3'
   }
 
   /**
@@ -162,6 +162,63 @@ export class PythonBridge {
   }
 
   /**
+   * Ensure a `node` shim exists that delegates to Electron's built-in Node.js
+   * via ELECTRON_RUN_AS_NODE=1, so PyExecJS can use it without requiring
+   * a separate Node.js installation on the user's machine.
+   */
+  private nodeShimDir: string | null = null
+  private ensureNodeShim(): string {
+    if (this.nodeShimDir) return this.nodeShimDir
+
+    const shimDir = path.join(app.getPath('temp'), 'xhs-helper-node-shim')
+    fs.mkdirSync(shimDir, { recursive: true })
+
+    if (process.platform === 'win32') {
+      const shimPath = path.join(shimDir, 'node.cmd')
+      if (!fs.existsSync(shimPath)) {
+        fs.writeFileSync(shimPath, `@echo off\r\nset ELECTRON_RUN_AS_NODE=1\r\n"${process.execPath}" %*\r\n`)
+      }
+    } else {
+      const shimPath = path.join(shimDir, 'node')
+      if (!fs.existsSync(shimPath)) {
+        fs.writeFileSync(
+          shimPath,
+          `#!/bin/sh\nELECTRON_RUN_AS_NODE=1 exec "${process.execPath}" "$@"\n`,
+          { mode: 0o755 },
+        )
+      }
+    }
+
+    this.nodeShimDir = shimDir
+    return shimDir
+  }
+
+  /**
+   * Build environment variables for Python subprocess
+   */
+  private buildPythonEnv(): NodeJS.ProcessEnv {
+    const packagesPath = this.getPackagesPath()
+    const nodeModulesPath = this.getNodeModulesPath()
+    const nodeShimDir = this.ensureNodeShim()
+
+    const env: NodeJS.ProcessEnv = {
+      ...process.env,
+      NODE_PATH: nodeModulesPath,
+      PYTHONIOENCODING: 'utf-8',
+      PYTHONUTF8: '1',
+      EXECJS_RUNTIME: 'Node',
+      // Put the node shim at the front of PATH so PyExecJS finds it first
+      PATH: `${nodeShimDir}${path.delimiter}${process.env.PATH || ''}`,
+    }
+
+    if (packagesPath) {
+      env.PYTHONPATH = packagesPath
+    }
+
+    return env
+  }
+
+  /**
    * Start spider task
    */
   async start(config: SpiderConfig, onMessage: MessageHandler): Promise<void> {
@@ -184,20 +241,7 @@ export class PythonBridge {
     const pythonPath = this.getPythonPath()
     const cliPath = this.getCliPath()
     const configJson = JSON.stringify(config)
-
-    const packagesPath = this.getPackagesPath()
-    const nodeModulesPath = this.getNodeModulesPath()
-    const env: NodeJS.ProcessEnv = {
-      ...process.env,
-      NODE_PATH: nodeModulesPath, // For PyExecJS to find node_modules (crypto-js, etc.)
-      PYTHONIOENCODING: 'utf-8', // Fix Chinese character encoding on Windows
-      PYTHONUTF8: '1', // Force all Python I/O to use UTF-8 (fixes PyExecJS encoding on Windows)
-    }
-
-    // Add PYTHONPATH if packages path exists
-    if (packagesPath) {
-      env.PYTHONPATH = packagesPath
-    }
+    const env = this.buildPythonEnv()
 
     this.process = spawn(pythonPath, [cliPath, configJson], {
       cwd: path.dirname(cliPath), // Set working directory to python-engine folder
@@ -376,20 +420,7 @@ export class PythonBridge {
     return new Promise((resolve, reject) => {
       const pythonPath = this.getPythonPath()
       const cliPath = this.getCliPath()
-      const packagesPath = this.getPackagesPath()
-      const nodeModulesPath = this.getNodeModulesPath()
-
-      const env: NodeJS.ProcessEnv = {
-        ...process.env,
-        NODE_PATH: nodeModulesPath, // For PyExecJS to find node_modules (crypto-js, etc.)
-        PYTHONIOENCODING: 'utf-8', // Fix Chinese character encoding on Windows
-        PYTHONUTF8: '1', // Force all Python I/O to use UTF-8 (fixes PyExecJS encoding on Windows)
-      }
-
-      // Add PYTHONPATH if packages path exists
-      if (packagesPath) {
-        env.PYTHONPATH = packagesPath
-      }
+      const env = this.buildPythonEnv()
 
       const validateProcess = spawn(pythonPath, [cliPath, 'validate-cookie', JSON.stringify(cookie)], {
         cwd: path.dirname(cliPath),
@@ -409,39 +440,52 @@ export class PythonBridge {
 
       validateProcess.on('close', () => {
         if (output.trim()) {
-          try {
-            const lines = output.trim().split('\n')
-            // Get the last valid JSON line (validation result)
-            for (let i = lines.length - 1; i >= 0; i--) {
-              const line = lines[i].trim()
-              if (line) {
-                const result: PythonMessage = JSON.parse(line)
-                if (result.type === 'validation_result') {
-                  resolve({
-                    valid: result.valid ?? false,
-                    message: result.message ?? '',
-                    userInfo: result.userInfo,
-                  })
-                  return
-                } else if (result.type === 'error') {
-                  resolve({
-                    valid: false,
-                    message: result.message ?? 'Validation failed',
-                    userInfo: null,
-                  })
-                  return
-                }
+          const lines = output.trim().split('\n')
+          // Get the last valid JSON line (validation result)
+          for (let i = lines.length - 1; i >= 0; i--) {
+            const line = lines[i].trim()
+            if (!line) continue
+            try {
+              const result: PythonMessage = JSON.parse(line)
+              if (result.type === 'validation_result') {
+                resolve({
+                  valid: result.valid ?? false,
+                  message: result.message ?? '',
+                  userInfo: result.userInfo,
+                })
+                return
+              } else if (result.type === 'error') {
+                resolve({
+                  valid: false,
+                  message: result.message ?? 'Validation failed',
+                  userInfo: null,
+                })
+                return
               }
+            } catch {
+              // Not a JSON line, try next
+              continue
             }
-          } catch {
-            console.error('Failed to parse validation output:', output)
           }
         }
 
-        // Fallback
+        // Fallback: extract user-friendly message from stderr
+        let message = '验证失败，请重试'
+        if (errorOutput) {
+          if (errorOutput.includes('SyntaxError') || errorOutput.includes('RuntimeError') || errorOutput.includes('execjs')) {
+            message = '签名引擎初始化失败，请确保系统已安装 Node.js（https://nodejs.org）'
+          } else if (errorOutput.includes('ModuleNotFoundError') || errorOutput.includes('No module named')) {
+            message = 'Python 依赖缺失，请重新安装应用'
+          } else if (errorOutput.includes('FileNotFoundError')) {
+            message = '签名文件缺失，请重新安装应用'
+          } else {
+            console.error('Cookie validation stderr:', errorOutput)
+          }
+        }
+
         resolve({
           valid: false,
-          message: errorOutput || 'Unknown validation error',
+          message,
           userInfo: null,
         })
       })
