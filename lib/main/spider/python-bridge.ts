@@ -2,7 +2,7 @@
  * Python Bridge Module
  * Manages Python subprocess for Spider XHS
  */
-import { spawn, ChildProcess } from 'child_process'
+import { spawn, execSync, ChildProcess } from 'child_process'
 import path from 'path'
 import fs from 'fs'
 import { app, BrowserWindow } from 'electron'
@@ -121,8 +121,13 @@ export class PythonBridge {
       return pythonBin
     }
 
-    // Development: use system Python
-    return 'python3'
+    // Development: resolve absolute path to avoid shell/PATH issues with spawn
+    const cmd = process.platform === 'win32' ? 'python' : 'python3'
+    try {
+      return execSync(`${cmd} -c "import sys; print(sys.executable)"`, { encoding: 'utf-8' }).trim()
+    } catch {
+      return cmd
+    }
   }
 
   /**
@@ -375,6 +380,13 @@ export class PythonBridge {
    */
   stop(): void {
     if (this.process) {
+      // Notify message handler before cleanup so pending Promises can resolve
+      this.messageHandler?.({
+        type: 'error',
+        code: 'STOPPED',
+        message: '任务已停止',
+      })
+
       this.process.kill('SIGTERM')
       this.process = null
 
@@ -438,7 +450,15 @@ export class PythonBridge {
         errorOutput += data.toString()
       })
 
-      validateProcess.on('close', () => {
+      validateProcess.on('close', (code) => {
+        console.log(`[Cookie validation] process exited with code ${code}`)
+        if (output.trim()) {
+          console.log('[Cookie validation] stdout:', output.trim())
+        }
+        if (errorOutput.trim()) {
+          console.log('[Cookie validation] stderr:', errorOutput.trim())
+        }
+
         if (output.trim()) {
           const lines = output.trim().split('\n')
           // Get the last valid JSON line (validation result)

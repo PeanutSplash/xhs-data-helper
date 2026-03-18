@@ -249,6 +249,7 @@ class DatabaseManager {
    * Delete a task and its logs
    */
   deleteTask(taskId: number): void {
+    this.db.prepare('DELETE FROM task_queue WHERE task_id = ?').run(taskId)
     this.db.prepare('DELETE FROM logs WHERE task_id = ?').run(taskId)
     this.db.prepare('DELETE FROM tasks WHERE id = ?').run(taskId)
   }
@@ -271,7 +272,8 @@ class DatabaseManager {
 
   /**
    * Fix stuck running tasks (mark as stopped if they're not actually running)
-   * This handles tasks that were interrupted without proper cleanup
+   * This handles tasks that were interrupted without proper cleanup.
+   * Called on app startup - all 'running' tasks are stuck since no Python process survives a restart.
    */
   fixStuckTasks(): number {
     const stmt = this.db.prepare(`
@@ -280,12 +282,27 @@ class DatabaseManager {
           completed_at = ?,
           error_message = '任务被中断'
       WHERE status = 'running'
-        AND started_at < ?
     `)
 
-    // Mark as stuck if running for more than 10 minutes without updates
-    const tenMinutesAgo = Date.now() - 10 * 60 * 1000
-    const result = stmt.run(Date.now(), tenMinutesAgo)
+    const result = stmt.run(Date.now())
+
+    return result.changes
+  }
+
+  /**
+   * Fix stuck running queue items (mark as failed on app startup)
+   * Queue items stuck in 'running' status means the app was closed mid-task.
+   */
+  fixStuckQueueItems(): number {
+    const stmt = this.db.prepare(`
+      UPDATE task_queue
+      SET status = 'failed',
+          completed_at = ?,
+          error_message = '任务被中断（应用重启）'
+      WHERE status = 'running'
+    `)
+
+    const result = stmt.run(Date.now())
 
     return result.changes
   }

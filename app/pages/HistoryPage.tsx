@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { History, Trash2, ChevronDown, ChevronUp, FileSpreadsheet, CheckCircle, XCircle, Clock, Search, FolderOpen, AlertTriangle, Activity, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react'
+import { History, Trash2, ChevronDown, ChevronUp, FileSpreadsheet, CheckCircle, XCircle, Clock, Search, FolderOpen, AlertTriangle, Activity, RefreshCw, ChevronLeft, ChevronRight, Square } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
@@ -293,6 +293,41 @@ export default function HistoryPage() {
     }
   }
 
+  const handleStopQueue = async () => {
+    try {
+      const result = await window.conveyor.spider.stopQueue()
+      if (result.success) {
+        toast.success('已停止下载')
+        loadQueue()
+        loadTasks()
+      } else {
+        toast.error(result.message || '停止失败')
+      }
+    } catch (error) {
+      console.error('Failed to stop queue:', error)
+      toast.error('停止失败')
+    }
+  }
+
+  const handleStopTask = async (taskId: number) => {
+    try {
+      // Try to stop the running process first
+      const isRunning = await window.conveyor.spider.isRunning()
+      if (isRunning) {
+        await window.conveyor.spider.stopQueue()
+      } else {
+        // Process is not running, just fix the stuck database record
+        await window.conveyor.spider.deleteTask(taskId)
+      }
+      toast.success('任务已停止')
+      loadQueue()
+      loadTasks()
+    } catch (error) {
+      console.error('Failed to stop task:', error)
+      toast.error('停止失败')
+    }
+  }
+
   const filteredTasks = tasks.filter(task => {
     if (!searchTerm) return true
     const params = JSON.parse(task.params)
@@ -343,15 +378,26 @@ export default function HistoryPage() {
 
       {/* Queue Status - Running & Pending */}
       {(runningItems.length > 0 || pendingItems.length > 0 || failedQueueItems.length > 0) && (
-        <motion.div variants={itemVariants} className="space-y-4">
+        <motion.div initial={{ y: 10, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="space-y-4">
           {/* Running */}
           {runningItems.length > 0 && (
             <Card className="border-primary/50 bg-primary/5">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Activity className="w-5 h-5 animate-pulse text-primary" />
-                  正在下载
-                </CardTitle>
+                <div className="flex items-center justify-between w-full">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Activity className="w-5 h-5 animate-pulse text-primary" />
+                    正在下载
+                  </CardTitle>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleStopQueue}
+                    className="border-red-500/30 hover:bg-red-500/10 text-red-500"
+                  >
+                    <Square className="w-3 h-3 mr-1" />
+                    停止
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {runningItems.map((item) => (
@@ -437,15 +483,25 @@ export default function HistoryPage() {
                           <p className="text-xs text-red-500">{item.error_message}</p>
                         )}
                       </div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleRetryQueue(item)}
-                        className="flex-shrink-0 ml-2 border-red-500/30 hover:bg-red-500/10"
-                      >
-                        <RefreshCw className="w-3 h-3 mr-1" />
-                        重试
-                      </Button>
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleRetryQueue(item)}
+                          className="border-red-500/30 hover:bg-red-500/10"
+                        >
+                          <RefreshCw className="w-3 h-3 mr-1" />
+                          重试
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleRemoveFromQueue(item.id)}
+                          className="hover:text-red-500"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -529,6 +585,25 @@ export default function HistoryPage() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
+                              {task.status === 'running' && (
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleStopTask(task.id)
+                                      }}
+                                    >
+                                      <Square className="w-4 h-4 text-red-500" />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>停止任务</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
                               {task.status === 'completed' && (() => {
                                 const config = task.config ? JSON.parse(task.config) : null
                                 const hasExcel = config?.saveOptions?.mode === 'excel' || config?.saveOptions?.mode === 'all'
