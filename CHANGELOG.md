@@ -4,6 +4,36 @@ All notable changes are listed here.
 
 <br>
 
+## [1.1.1] - 2026-03-24
+
+### Features
+
+- 添加停止任务和队列功能，优化任务和队列的处理逻辑
+- Enhances UI with custom scrollbars and updates settings
+- Introduces geolocation and note range search filters
+- Update license and improve documentation structure
+- Improve login window appearance and behavior
+
+### Bug Fixes
+
+- use Electron node.exe hard link + ICU data for execjs on Windows (#14)
+- use Electron built-in Node.js for PyExecJS to fix SyntaxError on user machines (#12)
+- add PYTHONUTF8
+- update python-engine submodule with notes task count fix
+- resolve windows encoding issue and optimize account anomaly detection
+- Fix PyExecJS NODE_PATH to locate node_modules correctly
+- Install Node.js dependencies for PyExecJS during Python setup
+- Fixes stuck tasks on application startup
+- Delegates task database operations to Python bridge
+- Removes media type selection from download options
+- Updates download icon component name
+- Transform queue task config for Python bridge compatibility
+- Add PYTHONPATH support for cookie validation
+
+### Refactoring
+
+- Refactor download workflow and improve queue management
+
 ## [1.1.0] - 2026-03-18
 
 ### Features
