@@ -179,18 +179,50 @@ export class PythonBridge {
     fs.mkdirSync(shimDir, { recursive: true })
 
     if (process.platform === 'win32') {
-      const shimPath = path.join(shimDir, 'node.cmd')
-      if (!fs.existsSync(shimPath)) {
-        fs.writeFileSync(shimPath, `@echo off\r\nset ELECTRON_RUN_AS_NODE=1\r\n"${process.execPath}" %*\r\n`)
+      // On Windows, execjs uses subprocess.Popen(["node", ...]) which calls
+      // CreateProcess API — it can only execute .exe/.com files, NOT .cmd/.bat.
+      // So we must create a node.exe hard link pointing to the Electron binary.
+      // ELECTRON_RUN_AS_NODE=1 is set in buildPythonEnv() to make it behave as Node.js.
+      const electronDir = path.dirname(process.execPath)
+      const shimPath = path.join(shimDir, 'node.exe')
+
+      // Helper: link or copy a file into the shim directory
+      const ensureFile = (srcName: string, destName?: string): void => {
+        const src = path.join(electronDir, srcName)
+        const dest = path.join(shimDir, destName || srcName)
+        if (!fs.existsSync(src)) return
+        try {
+          if (fs.existsSync(dest)) {
+            const destStat = fs.statSync(dest)
+            const srcStat = fs.statSync(src)
+            if (destStat.ino === srcStat.ino || destStat.size === srcStat.size) return // already up to date
+            fs.unlinkSync(dest)
+          }
+          fs.linkSync(src, dest)
+        } catch {
+          try {
+            if (fs.existsSync(dest)) fs.unlinkSync(dest)
+            fs.copyFileSync(src, dest)
+          } catch (e) {
+            console.error(`Failed to create shim for ${srcName}:`, e)
+          }
+        }
       }
+
+      // Link the Electron binary as node.exe
+      ensureFile(path.basename(process.execPath), 'node.exe')
+      // Electron-as-Node still requires ICU data for internationalization,
+      // even with ELECTRON_RUN_AS_NODE=1. Without it: "Invalid file descriptor to ICU data received"
+      ensureFile('icudtl.dat')
+      // v8 snapshots may also be needed for fast startup
+      ensureFile('v8_context_snapshot.bin')
+      ensureFile('snapshot_blob.bin')
     } else {
       const shimPath = path.join(shimDir, 'node')
-      if (!fs.existsSync(shimPath)) {
-        fs.writeFileSync(
-          shimPath,
-          `#!/bin/sh\nELECTRON_RUN_AS_NODE=1 exec "${process.execPath}" "$@"\n`,
-          { mode: 0o755 },
-        )
+      const shimContent = `#!/bin/sh\nELECTRON_RUN_AS_NODE=1 exec "${process.execPath}" "$@"\n`
+      const existing = fs.existsSync(shimPath) ? fs.readFileSync(shimPath, 'utf-8') : ''
+      if (existing !== shimContent) {
+        fs.writeFileSync(shimPath, shimContent, { mode: 0o755 })
       }
     }
 
@@ -206,13 +238,22 @@ export class PythonBridge {
     const nodeModulesPath = this.getNodeModulesPath()
     const nodeShimDir = this.ensureNodeShim()
 
+    const nodeExePath = process.platform === 'win32'
+      ? path.join(nodeShimDir, 'node.exe')
+      : path.join(nodeShimDir, 'node')
+
     const env: NodeJS.ProcessEnv = {
       ...process.env,
       NODE_PATH: nodeModulesPath,
       PYTHONIOENCODING: 'utf-8',
       PYTHONUTF8: '1',
       EXECJS_RUNTIME: 'Node',
-      // Put the node shim at the front of PATH so PyExecJS finds it first
+      // Required for the node.exe hard link (which is actually Electron) to run as Node.js
+      ELECTRON_RUN_AS_NODE: '1',
+      // Explicit path to our node binary — do NOT rely on PATH lookup,
+      // which could resolve to nvm/volta/system Node instead of Electron's.
+      NODE_BINARY: nodeExePath,
+      // Still prepend shim dir to PATH as a fallback
       PATH: `${nodeShimDir}${path.delimiter}${process.env.PATH || ''}`,
     }
 
@@ -489,14 +530,15 @@ export class PythonBridge {
           }
         }
 
-        // Fallback: extract user-friendly message from stderr
+        // Fallback: extract user-friendly message from stderr + stdout
         let message = '验证失败，请重试'
-        if (errorOutput) {
-          if (errorOutput.includes('SyntaxError') || errorOutput.includes('RuntimeError') || errorOutput.includes('execjs')) {
-            message = '签名引擎初始化失败，请确保系统已安装 Node.js（https://nodejs.org）'
-          } else if (errorOutput.includes('ModuleNotFoundError') || errorOutput.includes('No module named')) {
+        const combinedOutput = errorOutput + output
+        if (combinedOutput) {
+          if (combinedOutput.includes('SyntaxError') || combinedOutput.includes('RuntimeError') || combinedOutput.includes('execjs') || combinedOutput.includes('ExternalRuntime') || /\(\d+, ['"]/.test(combinedOutput)) {
+            message = '签名引擎执行失败，请确保系统已安装 Node.js（https://nodejs.org）并重启应用'
+          } else if (combinedOutput.includes('ModuleNotFoundError') || combinedOutput.includes('No module named')) {
             message = 'Python 依赖缺失，请重新安装应用'
-          } else if (errorOutput.includes('FileNotFoundError')) {
+          } else if (combinedOutput.includes('FileNotFoundError')) {
             message = '签名文件缺失，请重新安装应用'
           } else {
             console.error('Cookie validation stderr:', errorOutput)
