@@ -15,11 +15,11 @@ jobs:
         with:
           submodules: true
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT }}
 
       - name: Sync fork with upstream
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT }}
         run: |
           # 使用 GitHub API 将 fork 同步到上游最新
           response=$(gh api repos/PeanutSplash/Spider_XHS/merge-upstream \
