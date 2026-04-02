@@ -130,18 +130,6 @@ jobs:
         id: version
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Delete old releases
-        run: |
-          # 删除旧的 release（保留 git tag）
-          gh release list --repo ${{ github.repository }} --limit 100 | awk '{print $1}' | while read tag; do
-            if [ -n "$tag" ] && [ "$tag" != "${{ github.ref_name }}" ]; then
-              echo "Deleting release $tag"
-              gh release delete "$tag" --repo ${{ github.repository }} --yes || true
-            fi
-          done
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
