@@ -4,6 +4,8 @@ All notable changes are listed here.
 
 <br>
 
+## [1.1.2] - 2026-04-02
+
 ## [1.1.1] - 2026-03-24
 
 ### Features
@@ -62,12 +64,6 @@ All notable changes are listed here.
 ### Refactoring
 
 - Refactor download workflow and improve queue management
-
-# Change Log
-
-All notable changes are listed here.
-
-<br>
 
 ## [1.0.18] - 2026-03-13
 
