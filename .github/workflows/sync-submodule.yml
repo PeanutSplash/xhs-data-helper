@@ -1,0 +1,61 @@
+name: Sync python-engine submodule
+
+on:
+  schedule:
+    # 每天 UTC 8:00 (北京时间 16:00)
+    - cron: '0 8 * * *'
+  workflow_dispatch: # 支持手动触发
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main repo with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync fork with upstream
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 使用 GitHub API 将 fork 同步到上游最新
+          response=$(gh api repos/PeanutSplash/Spider_XHS/merge-upstream \
+            -f branch=master \
+            --jq '.message' 2>&1) || true
+          echo "Sync result: $response"
+
+          # "Successfully fetched and fast-forwarded" 或 "This branch is not behind the upstream" 都算成功
+          if echo "$response" | grep -qE "Successfully|not behind"; then
+            echo "sync_ok=true" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Fork sync failed or had conflicts: $response"
+            echo "sync_ok=false" >> "$GITHUB_ENV"
+          fi
+
+      - name: Update submodule to latest
+        if: env.sync_ok == 'true'
+        run: |
+          cd python-engine
+          git fetch origin master
+          git checkout origin/master
+          cd ..
+
+          # 检查子模块是否有变化
+          if git diff --quiet python-engine; then
+            echo "Submodule already up to date"
+            echo "has_changes=false" >> "$GITHUB_ENV"
+          else
+            echo "has_changes=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Commit and push
+        if: env.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add python-engine
+          git commit -m "chore: sync python-engine submodule with upstream"
+          git push
