@@ -70,6 +70,10 @@ export class SpiderApi {
     return this.electronAPI.ipcRenderer.invoke('spider:config:setProxy', proxy)
   }
 
+  setRequestDelay = (delayMs: number): Promise<{ success: boolean }> => {
+    return this.electronAPI.ipcRenderer.invoke('spider:config:setRequestDelay', delayMs)
+  }
+
   setLastTask = (type: string, params: any): Promise<{ success: boolean }> => {
     return this.electronAPI.ipcRenderer.invoke('spider:config:setLastTask', type, params)
   }

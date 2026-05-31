@@ -13,6 +13,7 @@ import {
   Sun,
   Moon,
   Loader2,
+  Timer,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
@@ -36,6 +37,7 @@ export default function SettingsPage({ onCookieStatusChange }: SettingsPageProps
   const [excelPath, setExcelPath] = useState('')
   const [proxyEnabled, setProxyEnabled] = useState(false)
   const [proxyUrl, setProxyUrl] = useState('http://127.0.0.1:7890')
+  const [requestDelayMs, setRequestDelayMs] = useState(1500)
   const [isCookieValid, setIsCookieValid] = useState<boolean | null>(null)
   const [saving, setSaving] = useState(false)
   const [validating, setValidating] = useState(false)
@@ -58,6 +60,7 @@ export default function SettingsPage({ onCookieStatusChange }: SettingsPageProps
       setExcelPath(config.paths.excel)
       setProxyEnabled(config.proxy.enabled)
       setProxyUrl(config.proxy.url)
+      setRequestDelayMs(config.requestDelayMs ?? 1500)
       // Cookie 状态由 App.tsx 启动时验证，这里不重复验证
     } catch (error) {
       console.error('Failed to load config:', error)
@@ -175,6 +178,19 @@ export default function SettingsPage({ onCookieStatusChange }: SettingsPageProps
       toast.success('代理设置保存成功!')
     } catch (error) {
       console.error('Failed to save proxy:', error)
+      toast.error('保存失败')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveRequestDelay = async () => {
+    setSaving(true)
+    try {
+      await window.conveyor.spider.setRequestDelay(requestDelayMs)
+      toast.success('请求间隔设置保存成功!')
+    } catch (error) {
+      console.error('Failed to save request delay:', error)
       toast.error('保存失败')
     } finally {
       setSaving(false)
@@ -462,6 +478,48 @@ export default function SettingsPage({ onCookieStatusChange }: SettingsPageProps
               <Button onClick={handleSaveProxy} disabled={saving} className="w-full bg-primary hover:bg-primary/90">
                 <Save className="w-4 h-4 mr-2" />
                 {saving ? '保存中...' : '保存代理设置'}
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Request Delay Configuration */}
+        <motion.div variants={itemVariants}>
+          <Card className="border-border bg-card shadow-sm">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                  <Timer className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <CardTitle>请求间隔</CardTitle>
+                  <CardDescription>降低被识别为机器人的风险</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="requestDelay">平均请求间隔 (毫秒)</Label>
+                <Input
+                  id="requestDelay"
+                  type="number"
+                  min={0}
+                  step={100}
+                  value={requestDelayMs}
+                  onChange={(e) => setRequestDelayMs(Number(e.target.value))}
+                  placeholder="1500"
+                  className="bg-secondary/20 border-border focus:border-primary/50"
+                />
+                <p className="text-xs text-muted-foreground">
+                  采用泊松过程（指数分布）在连续爬取请求之间插入随机延迟，比固定间隔更接近真实用户行为。这是<span className="font-medium">平均值</span>，实际间隔会在其上下随机波动。设为 0 可关闭（不推荐）。
+                </p>
+              </div>
+
+              <Separator className="bg-border" />
+
+              <Button onClick={handleSaveRequestDelay} disabled={saving} className="w-full bg-primary hover:bg-primary/90">
+                <Save className="w-4 h-4 mr-2" />
+                {saving ? '保存中...' : '保存请求间隔设置'}
               </Button>
             </CardContent>
           </Card>

@@ -62,6 +62,11 @@ export function registerSpiderHandlers(mainWindow: BrowserWindow | null) {
     return { success: true }
   })
 
+  ipcMain.handle('spider:config:setRequestDelay', async (_event, delayMs: number) => {
+    configManager.setRequestDelayMs(delayMs)
+    return { success: true }
+  })
+
   ipcMain.handle('spider:config:setLastTask', async (_event, type: string, params: any) => {
     configManager.setLastTask(type, params)
     return { success: true }

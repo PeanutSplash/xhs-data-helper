@@ -18,6 +18,10 @@ interface AppConfig {
     enabled: boolean
     url: string
   }
+  // Average request interval in milliseconds. Used as the mean of a Poisson
+  // (exponential) delay between consecutive crawl requests to reduce bot detection.
+  // 0 disables the delay.
+  requestDelayMs: number
   lastTask?: {
     type: string
     params: Record<string, any>
@@ -34,6 +38,7 @@ const DEFAULT_CONFIG: AppConfig = {
     enabled: false,
     url: 'http://127.0.0.1:7890',
   },
+  requestDelayMs: 1500,
 }
 
 class ConfigManager {
@@ -190,6 +195,21 @@ class ConfigManager {
    */
   getProxy(): AppConfig['proxy'] {
     return this.config.proxy
+  }
+
+  /**
+   * Set average request delay (ms). Clamped to a non-negative number.
+   */
+  setRequestDelayMs(delayMs: number): void {
+    this.config.requestDelayMs = Number.isFinite(delayMs) && delayMs > 0 ? delayMs : 0
+    this.save()
+  }
+
+  /**
+   * Get average request delay (ms)
+   */
+  getRequestDelayMs(): number {
+    return this.config.requestDelayMs ?? DEFAULT_CONFIG.requestDelayMs
   }
 
   /**

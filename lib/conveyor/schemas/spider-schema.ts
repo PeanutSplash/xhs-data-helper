@@ -50,6 +50,7 @@ export const ConfigSchema = z.object({
     enabled: z.boolean(),
     url: z.string(),
   }),
+  requestDelayMs: z.number().optional(),
   lastTask: z
     .object({
       type: z.string(),

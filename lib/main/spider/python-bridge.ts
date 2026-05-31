@@ -255,6 +255,8 @@ export class PythonBridge {
       NODE_BINARY: nodeExePath,
       // Still prepend shim dir to PATH as a fallback
       PATH: `${nodeShimDir}${path.delimiter}${process.env.PATH || ''}`,
+      // Mean interval (ms) for the Poisson request delay in the Python engine
+      REQUEST_DELAY_MS: String(configManager.getRequestDelayMs()),
     }
 
     if (packagesPath) {
