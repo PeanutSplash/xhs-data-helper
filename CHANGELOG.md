@@ -4,6 +4,12 @@ All notable changes are listed here.
 
 <br>
 
+## [1.1.4] - 2026-08-21
+
+### Bug Fixes
+
+- rebuild better-sqlite3 per target arch for multi-arch packages
+
 ## [Unreleased]
 
 ### Bug Fixes
