@@ -10,6 +10,10 @@ All notable changes are listed here.
 
 - Rebuild and verify `better-sqlite3` per target architecture so macOS Intel (x64) / Windows ARM64 packages no longer ship the host-arch native binary (#18)
 
+### Chores
+
+- Sync `python-engine` with upstream `cv-cat/Spider_XHS` algorithm/auth overhaul (`feat: update all alg`); adapt Electron `cli.py` to `XHSPcAuth` + bootstrap, keep poisson request delay
+
 ## [1.1.3] - 2026-05-31
 
 ### Features
