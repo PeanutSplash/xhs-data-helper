@@ -73,7 +73,11 @@ linux:
   category: Utility
 appImage:
   artifactName: ${name}-${version}.${ext}
+# Keep false: a single multi-arch pack must not rebuild only for the host.
+# beforePack rebuilds better-sqlite3 per target arch; afterPack verifies it (#18).
 npmRebuild: false
+beforePack: scripts/before-pack.js
+afterPack: scripts/after-pack.js
 publish:
   provider: github
   owner: PeanutSplash

@@ -11,6 +11,7 @@
     "dev": "cross-env ELECTRON_DISABLE_SANDBOX=1 electron-vite dev -w",
     "format": "prettier --write .",
     "lint": "eslint . --ext .ts,.tsx --fix",
+    "test:native-arch": "node scripts/native-arch.selftest.js",
     "start": "electron-vite preview",
     "postinstall": "electron-builder install-app-deps",
     "setup:python": "node scripts/download-python.js && node scripts/install-python-deps.js",

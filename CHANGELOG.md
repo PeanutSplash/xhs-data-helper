@@ -4,6 +4,12 @@ All notable changes are listed here.
 
 <br>
 
+## [Unreleased]
+
+### Bug Fixes
+
+- Rebuild and verify `better-sqlite3` per target architecture so macOS Intel (x64) / Windows ARM64 packages no longer ship the host-arch native binary (#18)
+
 ## [1.1.3] - 2026-05-31
 
 ### Features
